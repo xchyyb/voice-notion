@@ -56,19 +56,8 @@ npm run dev
      - 配置了有效的 SSL 证书，使用 HTTPS 访问
      - 或使用 nginx 等工具配置反向代理
 
-## 浏览器支持
+MediaDevices API（包括麦克风访问）只能在以下环境中使用：
+localhost
+HTTPS 网站
+使用有效 SSL 证书的 IP 地址
 
-本应用需要使用支持 MediaRecorder API 的现代浏览器：
-
-- Chrome 49+
-- Firefox 25+
-- Safari 14.1+
-- Edge 79+
-
-请确保：
-- 浏览器已授予麦克风访问权限
-- 设备已正确连接麦克风
-- 使用以下方式访问：
-  - localhost
-  - HTTPS 协议
-  - 有效 SSL 证书的域名
