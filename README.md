@@ -50,4 +50,25 @@ cp .env.example .env
 npm run dev
 ```
 
-2. 打开浏览器访问 `http://localhost:5858`
+2. 访问方式：
+   - 推荐：使用 `http://localhost:5858` 访问
+   - 如需通过 IP 访问（如 `http://192.168.1.x:5858`），请确保：
+     - 配置了有效的 SSL 证书，使用 HTTPS 访问
+     - 或使用 nginx 等工具配置反向代理
+
+## 浏览器支持
+
+本应用需要使用支持 MediaRecorder API 的现代浏览器：
+
+- Chrome 49+
+- Firefox 25+
+- Safari 14.1+
+- Edge 79+
+
+请确保：
+- 浏览器已授予麦克风访问权限
+- 设备已正确连接麦克风
+- 使用以下方式访问：
+  - localhost
+  - HTTPS 协议
+  - 有效 SSL 证书的域名

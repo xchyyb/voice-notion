@@ -23,33 +23,66 @@ export default function BottomBar() {
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
+      // 首先检查浏览器是否支持必要的 API
+      if (typeof window === 'undefined') {
+        throw new Error('只能在浏览器环境中使用录音功能');
+      }
 
-      mediaRecorder.ondataavailable = (event) => {
-        audioChunksRef.current.push(event.data);
-      };
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('您的浏览器不支持录音功能，请使用最新版本的 Chrome、Firefox 或 Safari');
+      }
 
-      mediaRecorder.onstop = async () => {
-        clearInterval(timerRef.current!);
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-        const audioBase64 = await blobToBase64(audioBlob);
-        sendAudioToTranscribe(audioBase64);
-        audioChunksRef.current = [];
-        setRecordingTime(0);
-        
-        // 停止所有音轨
-        stream.getTracks().forEach(track => track.stop());
-      };
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            sampleRate: 44100
+          } 
+        });
 
-      mediaRecorder.start();
-      setIsRecording(true);
-      timerRef.current = setInterval(() => {
-        setRecordingTime((prev) => prev + 1);
-      }, 1000);
+        const mediaRecorder = new MediaRecorder(stream, {
+          mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'
+        });
+
+        mediaRecorderRef.current = mediaRecorder;
+
+        mediaRecorder.ondataavailable = (event) => {
+          audioChunksRef.current.push(event.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+          clearInterval(timerRef.current!);
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+          const audioBase64 = await blobToBase64(audioBlob);
+          sendAudioToTranscribe(audioBase64);
+          audioChunksRef.current = [];
+          setRecordingTime(0);
+          
+          // 停止所有音轨
+          stream.getTracks().forEach(track => track.stop());
+        };
+
+        mediaRecorder.start();
+        setIsRecording(true);
+        timerRef.current = setInterval(() => {
+          setRecordingTime((prev) => prev + 1);
+        }, 1000);
+      } catch (mediaError) {
+        if ((mediaError as Error).name === 'NotAllowedError') {
+          throw new Error('请允许浏览器访问麦克风后重试');
+        } else if ((mediaError as Error).name === 'NotFoundError') {
+          throw new Error('未检测到麦克风设备，请检查设备连接');
+        } else {
+          throw new Error('录音初始化失败，请检查麦克风权限和设备连接');
+        }
+      }
+
     } catch (error) {
-      console.error('Error accessing microphone:', error);
+      console.error('录音错误:', error);
+      alert(error instanceof Error ? error.message : '录音功能初始化失败');
+      setIsRecording(false);
+      setIsTranscribing(false);
     }
   };
 
